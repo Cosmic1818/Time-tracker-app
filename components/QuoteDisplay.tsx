@@ -15,7 +15,7 @@ const QuoteDisplay: React.FC = () => {
         setQuoteIndex((prevIndex) => (prevIndex + 1) % allQuotes.length);
         setIsFading(false);
       }, 500); // This duration should match the CSS transition duration
-    }, 11000); // 11000ms = 11 seconds
+    }, 25000); // 25000ms = 25 seconds
 
     return () => clearInterval(interval);
   }, []);

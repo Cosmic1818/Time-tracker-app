@@ -1,10 +1,10 @@
 export enum QuoteCategory {
-    Concentration = "Concentration",
-    Knowledge = "Knowledge",
-    Perseverance = "Perseverance",
-    MentalStrength = "Mental Strength",
-    Dharma = "Dharma",
-    SelfDiscipline = "Self-Discipline",
+    Focus = "Focus", // (एकाग्रता)
+    Determination = "Determination", // (दृढ़ निश्चय)
+    Buddhi = "Buddhi (Intellect)", // (बुद्धि)
+    Vidya = "Vidya (Knowledge)", // (विद्या)
+    Gyan = "Gyan (Wisdom)", // (ज्ञान)
+    GyanForStudent = "Gyan for Students", // (विद्यार्थी ज्ञान)
 }
 
 export interface Quote {
