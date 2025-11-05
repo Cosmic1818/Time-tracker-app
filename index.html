@@ -16,34 +16,77 @@
       .font-lora {
         font-family: 'Lora', serif;
       }
+      
+      /* Theme Variables */
+      :root, .theme-vedic {
+        --color-accent-glow: rgba(251, 146, 60, 0.3);
+        --color-accent-glow-dark: rgba(124, 58, 237, 0.2);
+        --color-accent-particle: #fcd34d; /* amber-300 */
+        --color-accent-text-glow-light: rgba(255, 255, 255, 0.5);
+        --color-accent-text-glow-dark: rgba(251, 146, 60, 0.4);
+        --color-timer-progress: rgba(251, 146, 60, 0.5);
+        --color-button-primary: #9a3412; /* orange-800 */
+        --color-button-primary-hover: #7c2d12; /* orange-900 */
+        --color-button-mode-active-bg: rgba(124, 45, 18, 0.8); /* orange-900/80 */
+        --color-text-quote: #78350f; /* orange-950 */
+        --dark-color-text-quote: #ffedd5; /* orange-100 */
+      }
+
+      .theme-forest {
+        --color-accent-glow: rgba(74, 222, 128, 0.3); /* green-400 */
+        --color-accent-glow-dark: rgba(21, 128, 61, 0.2); /* green-700 */
+        --color-accent-particle: #bbf7d0; /* green-200 */
+        --color-accent-text-glow-light: rgba(255, 255, 255, 0.5);
+        --color-accent-text-glow-dark: rgba(134, 239, 172, 0.4); /* green-300 */
+        --color-timer-progress: rgba(74, 222, 128, 0.5);
+        --color-button-primary: #15803d; /* green-700 */
+        --color-button-primary-hover: #166534; /* green-800 */
+        --color-button-mode-active-bg: rgba(22, 101, 52, 0.8);
+        --color-text-quote: #14532d; /* green-900 */
+        --dark-color-text-quote: #dcfce7; /* green-100 */
+      }
+
+      .theme-ocean {
+        --color-accent-glow: rgba(96, 165, 250, 0.3); /* blue-400 */
+        --color-accent-glow-dark: rgba(30, 64, 175, 0.2); /* blue-900 */
+        --color-accent-particle: #bfdbfe; /* blue-200 */
+        --color-accent-text-glow-light: rgba(255, 255, 255, 0.5);
+        --color-accent-text-glow-dark: rgba(147, 197, 253, 0.4); /* blue-300 */
+        --color-timer-progress: rgba(96, 165, 250, 0.5);
+        --color-button-primary: #1d4ed8; /* blue-700 */
+        --color-button-primary-hover: #1e40af; /* blue-800 */
+        --color-button-mode-active-bg: rgba(30, 64, 175, 0.8);
+        --color-text-quote: #1e3a8a; /* blue-900 */
+        --dark-color-text-quote: #dbeafe; /* blue-100 */
+      }
+      
       /* Animation for the study scene */
       @keyframes float {
-        0% {
-          transform: translateY(0);
-          opacity: 0;
-        }
-        10%, 90% {
-          opacity: 0.8;
-        }
-        100% {
-          transform: translateY(-200px); /* Move up by more than the viewbox height */
-          opacity: 0;
-        }
+        0% { transform: translateY(0); opacity: 0; }
+        10%, 90% { opacity: 0.8; }
+        100% { transform: translateY(-200px); opacity: 0; }
       }
-      .particle-animation {
-        animation: float 20s linear infinite;
+      .particle-animation { animation: float 20s linear infinite; }
+      
+      @keyframes fall {
+        0% { transform: translateY(-30px) rotate(-30deg); opacity: 0; }
+        10%, 90% { opacity: 0.7; }
+        100% { transform: translateY(200px) rotate(30deg); opacity: 0; }
       }
+      .particle-fall-animation { animation: fall 25s linear infinite; }
+
       .text-glow {
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(251, 146, 60, 0.4);
+        text-shadow: 0 0 5px var(--color-accent-text-glow-light), 0 0 10px var(--color-accent-text-glow-dark);
       }
       .dark .text-glow {
-        text-shadow: 0 0 8px rgba(251, 191, 36, 0.6), 0 0 12px rgba(245, 158, 11, 0.5);
+        text-shadow: 0 0 8px var(--color-accent-text-glow-dark), 0 0 12px var(--color-accent-text-glow-dark);
       }
     </style>
   <script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
@@ -52,6 +95,996 @@
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module">
+      import React, { useState, useCallback, useMemo, useEffect, createContext, useContext, useRef } from 'react';
+      import ReactDOM from 'react-dom/client';
+
+      (() => {
+        // NOTE FOR OFFLINE USE:
+        // This file bundles all application code. However, it still relies on external
+        // resources for React, Tailwind CSS, and Google Fonts. For this to work
+        // completely offline, you would need to:
+        // 1. Download the React and ReactDOM scripts and replace the CDN links in the importmap.
+        // 2. Pre-compile the Tailwind CSS into a static CSS file and replace the Tailwind CDN script with an inline <style> tag.
+        // 3. Download the Google Fonts and host them locally.
+        // 4. Replace placeholder images from `picsum.photos` with local image files.
+
+        // --- Bundled Code ---
+
+        // From types.ts
+        var QuoteCategory;
+        (function (QuoteCategory) {
+            QuoteCategory["Concentration"] = "Concentration";
+            QuoteCategory["Knowledge"] = "Knowledge";
+            QuoteCategory["Perseverance"] = "Perseverance";
+            QuoteCategory["MentalStrength"] = "Mental Strength";
+            QuoteCategory["Dharma"] = "Dharma";
+            QuoteCategory["SelfDiscipline"] = "Self-Discipline";
+        })(QuoteCategory || (QuoteCategory = {}));
+
+        // From data/badges.ts
+        const badges = [
+          {
+            id: 1,
+            name: "Brahman's Student",
+            sessionsRequired: 5,
+            imageUrl: "https://picsum.photos/seed/brahma/200",
+            description: "You have begun your journey on the path of discipline. The seeds of focus are sown."
+          },
+          {
+            id: 2,
+            name: "Dharma Practitioner",
+            sessionsRequired: 25,
+            imageUrl: "https://picsum.photos/seed/vishnu/200",
+            description: "You are consistently upholding your duty to focus. Your mind is becoming a vessel of clarity."
+          },
+          {
+            id: 3,
+            name: "Mindful Warrior",
+            sessionsRequired: 100,
+            imageUrl: "https://picsum.photos/seed/narasimha/200",
+            description: "With courage and determination, you conquer distractions. Your mental strength is formidable."
+          },
+          {
+            id: 4,
+            name: "Self-Realized Soul",
+            sessionsRequired: 250,
+            imageUrl: "https://picsum.photos/seed/krishna/200",
+            description: "You understand the nature of your own mind. Inner peace and profound focus are your allies."
+          },
+          {
+            id: 5,
+            name: "Cosmic Harmonizer",
+            sessionsRequired: 500,
+            imageUrl: "https://picsum.photos/seed/shiva/200",
+            description: "Your focus transcends the mundane, aligning your actions with the cosmic rhythm. You are a creator of your own reality."
+          },
+          {
+            id: 6,
+            name: "Godhead Realized",
+            sessionsRequired: 1000,
+            imageUrl: "https://picsum.photos/seed/godhead/200",
+            description: "You have achieved supreme concentration. Your consciousness is one with the universal Self. You are the master of your mind."
+          }
+        ];
+
+        // From data/quotes.ts
+        const quotes = {
+          [QuoteCategory.Concentration]: [
+            { text: "योगस्थः कुरु कर्माणि सङ्गं त्यक्त्वा धनञ्जय।", translation: "हे धनञ्जय! तू आसक्ति को त्यागकर तथा सिद्धि और असिद्धि में समान बुद्धिवाला होकर योग में स्थित हुआ कर्तव्यकर्मों को कर।", source: "Bhagavad Gita 2.48", category: QuoteCategory.Concentration },
+            { text: "बुद्धियुक्तो जहातीह उभे सुकृतदुष्कृते।", translation: "समबुद्धि पुरुष पुण्य और पाप दोनों को इसी लोक में त्याग देता है अर्थात उनसे मुक्त हो जाता है।", source: "Bhagavad Gita 2.50", category: QuoteCategory.Concentration },
+            { text: "यदा संहरते चायं कूर्मोऽङ्गानीव सर्वशः। इन्द्रियाणीन्द्रियार्थेभ्यस्तस्य प्रज्ञा प्रतिष्ठिता॥", translation: "जिस प्रकार कछुआ सब ओर से अपने अंगों को समेट लेता है, वैसे ही जब यह पुरुष इन्द्रियों के विषयों से इन्द्रियों को सब प्रकार से हटा लेता है, तब उसकी बुद्धि स्थिर है (ऐसा समझना चाहिए)।", source: "Bhagavad Gita 2.58", category: QuoteCategory.Concentration },
+          ],
+          [QuoteCategory.Knowledge]: [
+            { text: "न हि ज्ञानेन सदृशं पवित्रमिह विद्यते।", translation: "इस संसार में ज्ञान के समान पवित्र करने वाला निःसंदेह कुछ भी नहीं है।", source: "Bhagavad Gita 4.38", category: QuoteCategory.Knowledge },
+            { text: "श्रद्धावान्ल्लभते ज्ञानं तत्परः संयतेन्द्रियः।", translation: "जो जितेन्द्रिय, साधनपरायण और শ্রদ্ধायुक्त है, वही ज्ञानको प्राप्त होता है।", source: "Bhagavad Gita 4.39", category: QuoteCategory.Knowledge },
+            { text: "अज्ञश्चाश्रद्दधानश्च संशयात्मा विनश्यति।", translation: "विवेकहीन और श्रद्धारहित संशययुक्त मनुष्य परमार्थ से अवश्य भ्रष्ट हो जाता है।", source: "Bhagavad Gita 4.40", category: QuoteCategory.Knowledge },
+          ],
+          [QuoteCategory.Perseverance]: [
+            { text: "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।", translation: "अपने द्वारा अपना उद्धार करे, अपना पतन न करे।", source: "Bhagavad Gita 6.5", category: QuoteCategory.Perseverance },
+            { text: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।", translation: "कर्म करने में ही तेरा अधिकार है, उसके फलों में कभी नहीं।", source: "Bhagavad Gita 2.47", category: QuoteCategory.Perseverance },
+            { text: "असफलता सफलता की सीढ़ी है।", translation: "असफलता सफलता की सीढ़ी है।", source: "Vedic Wisdom", category: QuoteCategory.Perseverance },
+          ],
+          [QuoteCategory.MentalStrength]: [
+            { text: "नैनं छिन्दन्ति शस्त्राणि नैनं दहति पावकः।", translation: "इस आत्मा को शस्त्र नहीं काट सकते, इसको आग नहीं जला सकती।", source: "Bhagavad Gita 2.23", category: QuoteCategory.MentalStrength },
+            { text: "सुखदुःखे समे कृत्वा लाभालाभौ जयाजयौ।", translation: "सुख-दुःख, लाभ-हानि और जय-पराजय को समान समझकर, उसके बाद युद्ध के लिये तैयार हो जा।", source: "Bhagavad Gita 2.38", category: QuoteCategory.MentalStrength },
+            { text: "मन एव मनुष्याणां कारणं बन्धमोक्षयोः।", translation: "मन ही मनुष्यों के बन्धन और मोक्ष का कारण है।", source: "Amrita Bindu Upanishad", category: QuoteCategory.MentalStrength },
+          ],
+          [QuoteCategory.Dharma]: [
+            { text: "यतो धर्मस्ततो जयः।", translation: "जहाँ धर्म है, वहाँ विजय है।", source: "Mahabharata", category: QuoteCategory.Dharma },
+            { text: "स्वधर्मे निधनं श्रेयः परधर्मो भयावहः।", translation: "अपने धर्म में मरना भी कल्याणकारक है और दूसरे का धर्म भय को देने वाला है।", source: "Bhagavad Gita 3.35", category: QuoteCategory.Dharma },
+            { text: "धर्मो रक्षति रक्षितः।", translation: "जो धर्म की रक्षा करता है, धर्म उसकी रक्षा करता है।", source: "Manu Smriti 8.15", category: QuoteCategory.Dharma },
+          ],
+          [QuoteCategory.SelfDiscipline]: [
+            { text: "क्रोधाद्भवति संमोहः संमोहात्स्मृतिविभ्रमः।", translation: "क्रोध से अत्यन्त मूढ़ भाव उत्पन्न हो जाता है, मूढ़ भाव से स्मृति में भ्रम हो जाता है।", source: "Bhagavad Gita 2.63", category: QuoteCategory.SelfDiscipline },
+            { text: "त्रिविधं नरकस्येदं द्वारं नाशनमात्मनः। कामः क्रोधस्तथा लोभस्तस्मादेतत्त्रयं त्यजेत्॥", translation: "काम, क्रोध तथा लोभ- यह तीन प्रकार के नरक के द्वार आत्मा का नाश करने वाले हैं, इसलिए इन तीनों को त्याग देना चाहिए।", source: "Bhagavad Gita 16.21", category: QuoteCategory.SelfDiscipline },
+            { text: "इन्द्रियाणां हि चरतां यन्मनोऽनुविधीयते।", translation: "क्योंकि जैसे जल में चलने वाली नाव को वायु हर लेती है, वैसे ही विषयों में विचरती हुई इन्द्रियों में से मन जिस इन्द्रिय के साथ रहता है, वह एक ही इन्द्रिय इस पुरुष की बुद्धि को हर लेती है।", source: "Bhagavad Gita 2.67", category: QuoteCategory.SelfDiscipline },
+          ],
+        };
+        const allQuotes = Object.values(quotes).flat();
+
+        // From assets/icons.tsx
+        const PlayIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", className: className }, React.createElement("path", { fillRule: "evenodd", d: "M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z", clipRule: "evenodd" })) );
+        const PauseIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", className: className }, React.createElement("path", { fillRule: "evenodd", d: "M6.75 5.25a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.25a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75H6.75zm8.25 0a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.25a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75h-2.25z", clipRule: "evenodd" })) );
+        const ResetIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", className: className }, React.createElement("path", { fillRule: "evenodd", d: "M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-4.5a.75.75 0 00-.75.75v4.5l1.903-1.903a5.25 5.25 0 00-8.735 2.457.75.75 0 001.48.225 3.75 3.75 0 016.255-1.756l-1.903 1.903h4.5a.75.75 0 00.75-.75v-4.5l-1.903 1.903a7.5 7.5 0 01-12.548-3.364z", clipRule: "evenodd" })) );
+        const SettingsIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", className: className }, React.createElement("path", { fillRule: "evenodd", d: "M11.078 2.25c-.917 0-1.699.663-1.946 1.55l-.29 1.159a6.75 6.75 0 00-1.042 1.042l-1.158.29c-.887.247-1.55.98-1.55 1.846v4.42c0 .866.663 1.6 1.55 1.847l1.158.29a6.75 6.75 0 001.042 1.042l.29 1.159c.247.887.98 1.55 1.846 1.55h4.42c.866 0 1.6-.663 1.847-1.55l.29-1.159a6.75 6.75 0 001.042-1.042l1.158-.29c.887-.247 1.55-.98 1.55-1.846v-4.42c0-.866-.663-1.6-1.55-1.847l-1.158-.29a6.75 6.75 0 00-1.042-1.042l-.29-1.159A1.946 1.946 0 0015.498 2.25h-4.42zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z", clipRule: "evenodd" })) );
+        const FocusIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", strokeWidth: 1.5, stroke: "currentColor", className: className }, React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" })) );
+        const ExitFocusIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", strokeWidth: 1.5, stroke: "currentColor", className: className }, React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M9 9L3.75 3.75M3.75 3.75h4.5m-4.5 0v4.5m11.25-4.5h4.5m-4.5 0v4.5m0 11.25h4.5m-4.5 0v-4.5M9 15l-5.25 5.25M3.75 20.25v-4.5m0 4.5h4.5" })) );
+        const CloseIcon = ({ className }) => ( React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", strokeWidth: 1.5, stroke: "currentColor", className: className }, React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M6 18L18 6M6 6l12 12" })) );
+
+        // From hooks/useLocalStorage.ts
+        function useLocalStorage(key, initialValue) {
+          const [storedValue, setStoredValue] = useState(() => {
+            try {
+              const item = window.localStorage.getItem(key);
+              return item ? JSON.parse(item) : initialValue;
+            } catch (error) {
+              console.error(error);
+              return initialValue;
+            }
+          });
+
+          useEffect(() => {
+            try {
+              const valueToStore = typeof storedValue === 'function'
+                  ? storedValue(storedValue)
+                  : storedValue;
+              window.localStorage.setItem(key, JSON.stringify(valueToStore));
+            } catch (error) {
+              console.error(error);
+            }
+          }, [key, storedValue]);
+
+          return [storedValue, setStoredValue];
+        }
+
+        // From hooks/useAudio.ts
+        let audioCtx = null;
+        const getAudioContext = () => {
+          if (typeof window === 'undefined') return null;
+          if (audioCtx) return audioCtx;
+
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const resumeContext = () => {
+              if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+              }
+              document.removeEventListener('click', resumeContext);
+              document.removeEventListener('touchstart', resumeContext);
+            };
+            document.addEventListener('click', resumeContext);
+            document.addEventListener('touchstart', resumeContext);
+          } catch (e) {
+            console.warn("Web Audio API is not supported in this browser.");
+            return null;
+          }
+          return audioCtx;
+        };
+
+        const playSound = (type) => {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') {
+              ctx.resume();
+            }
+            const now = ctx.currentTime;
+            switch (type) {
+                case 'click': {
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(800, now);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.1);
+                    break;
+                }
+                case 'unlock': {
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(440, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                    oscillator.frequency.exponentialRampToValueAtTime(1318.51, now + 0.3);
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.02);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.3);
+                    break;
+                }
+                case 'complete': {
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(783.99, now);
+                    oscillator.frequency.linearRampToValueAtTime(1046.50, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.4, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.4);
+                    break;
+                }
+                case 'slide': {
+                    const bufferSize = ctx.sampleRate * 0.2;
+                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    const whiteNoise = ctx.createBufferSource();
+                    whiteNoise.buffer = buffer;
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(200, now);
+                    filter.frequency.exponentialRampToValueAtTime(3000, now + 0.15);
+                    filter.Q.setValueAtTime(15, now);
+                    const gainNode = ctx.createGain();
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    whiteNoise.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    whiteNoise.start(now);
+                    whiteNoise.stop(now + 0.2);
+                    break;
+                }
+            }
+        };
+
+        const useAudio = (type) => {
+          const play = useCallback(() => {
+            playSound(type);
+          }, [type]);
+          return { play };
+        };
+
+        // --- Contexts and Global Hooks ---
+        const ProgressContext = createContext(null);
+        const SettingsContext = createContext(null);
+        const AudioContext = createContext(null);
+
+        const useProgress = () => {
+          const context = useContext(ProgressContext);
+          if (!context) throw new Error('useProgress must be used within a ProgressProvider');
+          return context;
+        };
+        const useSettings = () => {
+          const context = useContext(SettingsContext);
+          if (!context) throw new Error('useSettings must be used within a SettingsProvider');
+          return context;
+        };
+        const useAudioContext = () => {
+          const context = useContext(AudioContext);
+          if (!context) throw new Error('useAudioContext must be used within an AudioProvider');
+          return context;
+        };
+
+        // --- Components ---
+        const StudyAnimation = () => {
+          const particles = React.useMemo(() => 
+            Array.from({ length: 150 }).map(() => ({
+              cx: Math.random() * 300,
+              cy: 169,
+              r: Math.random() * 1.2 + 0.3,
+              delay: `-${Math.random() * 40}s`,
+              duration: `${Math.random() * 20 + 20}s`,
+            })), []);
+
+          const hariParticles = React.useMemo(() =>
+            Array.from({ length: 15 }).map(() => ({
+              x: Math.random() * 300,
+              y: 169,
+              size: Math.random() * 4 + 6,
+              delay: `-${Math.random() * 40}s`,
+              duration: `${Math.random() * 25 + 25}s`,
+            })), []);
+
+          return (
+            React.createElement("div", { className: "absolute inset-0 z-0 overflow-hidden" },
+                React.createElement("svg", { viewBox: "0 0 300 169", className: "w-full h-full object-cover", preserveAspectRatio: "xMidYMid slice" },
+                  React.createElement("defs", null,
+                    React.createElement("radialGradient", { id: "nebula", cx: "50%", cy: "50%", r: "50%" },
+                      React.createElement("stop", { offset: "0%", style: { stopColor: 'var(--color-accent-glow)' } }),
+                      React.createElement("stop", { offset: "70%", style: { stopColor: 'var(--color-accent-glow-dark)' } }),
+                      React.createElement("stop", { offset: "100%", stopColor: "rgba(17, 24, 39, 0)" })
+                    ),
+                    React.createElement("filter", { id: "glow" },
+                      React.createElement("feGaussianBlur", { stdDeviation: "2.5", result: "coloredBlur" }),
+                      React.createElement("feMerge", null,
+                        React.createElement("feMergeNode", { in: "coloredBlur" }),
+                        React.createElement("feMergeNode", { in: "SourceGraphic" })
+                      )
+                    )
+                  ),
+                  React.createElement("rect", { width: "300", height: "169", fill: "url(#nebula)" }),
+                   React.createElement("g", { className: "fill-orange-100/70 dark:fill-orange-200/70 opacity-50" },
+                        React.createElement("circle", { cx: "50", cy: "100", r: "1" }),
+                        React.createElement("circle", { cx: "100", cy: "30", r: "0.5" }),
+                        React.createElement("circle", { cx: "200", cy: "130", r: "0.8" }),
+                        React.createElement("circle", { cx: "250", cy: "50", r: "1.2" }),
+                        React.createElement("circle", { cx: "30", cy: "20", r: "0.7" }),
+                        React.createElement("circle", { cx: "280", cy: "110", r: "0.9" })
+                   ),
+                  React.createElement("g", { className: "fill-[var(--color-accent-particle)]", filter: "url(#glow)" },
+                    particles.map((p, i) => (
+                      React.createElement("circle", { 
+                        key: `p-${i}`, 
+                        cx: p.cx, 
+                        cy: p.cy, 
+                        r: p.r, 
+                        className: "particle-animation", 
+                        style: { 
+                          animationDelay: p.delay,
+                          animationDuration: p.duration,
+                        } 
+                      })
+                    )),
+                    hariParticles.map((p, i) => (
+                      React.createElement("text", {
+                        key: `h-${i}`,
+                        x: p.x,
+                        y: p.y,
+                        fontSize: p.size,
+                        className: "particle-animation font-lora",
+                        style: {
+                          animationDelay: p.delay,
+                          animationDuration: p.duration,
+                        },
+                        opacity: "0.8"
+                      }, "हरि")
+                    ))
+                  )
+                )
+            )
+          );
+        };
+        
+        const ForestAnimation = () => {
+          const particles = useMemo(() => 
+            Array.from({ length: 50 }).map(() => ({
+              x: Math.random() * 300,
+              y: 189,
+              scale: Math.random() * 0.5 + 0.5,
+              delay: `-${Math.random() * 50}s`,
+              duration: `${Math.random() * 25 + 25}s`,
+            })), []);
+
+          return (
+            React.createElement("div", { className: "absolute inset-0 z-0 overflow-hidden" },
+              React.createElement("svg", { viewBox: "0 0 300 169", className: "w-full h-full object-cover", preserveAspectRatio: "xMidYMid slice" },
+                React.createElement("defs", null,
+                  React.createElement("radialGradient", { id: "forest-glow", cx: "50%", cy: "100%", r: "80%" },
+                    React.createElement("stop", { offset: "0%", style: { stopColor: 'var(--color-accent-glow)' } }),
+                    React.createElement("stop", { offset: "100%", style: { stopColor: 'var(--color-accent-glow-dark)' } })
+                  )
+                ),
+                React.createElement("rect", { width: "300", height: "169", fill: "url(#forest-glow)" }),
+                React.createElement("g", { className: "fill-[var(--color-accent-particle)]" },
+                  particles.map((p, i) => (
+                    React.createElement("path", {
+                      key: i,
+                      d: "M0,0 C5,10 15,10 20,0 C15,-10 5,-10 0,0 Z",
+                      transform: `translate(${p.x}, ${p.y}) scale(${p.scale})`,
+                      className: "particle-fall-animation",
+                      style: {
+                        animationDelay: p.delay,
+                        animationDuration: p.duration,
+                      }
+                    })
+                  ))
+                )
+              )
+            )
+          );
+        };
+
+        const OceanAnimation = () => {
+          const particles = useMemo(() => 
+            Array.from({ length: 70 }).map(() => ({
+              cx: Math.random() * 300,
+              cy: 169,
+              r: Math.random() * 1.5 + 0.5,
+              delay: `-${Math.random() * 40}s`,
+              duration: `${Math.random() * 20 + 20}s`,
+            })), []);
+          
+          return (
+            React.createElement("div", { className: "absolute inset-0 z-0 overflow-hidden" },
+              React.createElement("svg", { viewBox: "0 0 300 169", className: "w-full h-full object-cover", preserveAspectRatio: "xMidYMid slice" },
+                React.createElement("defs", null,
+                  React.createElement("radialGradient", { id: "ocean-glow", cx: "50%", cy: "50%", r: "70%" },
+                    React.createElement("stop", { offset: "0%", style: { stopColor: 'var(--color-accent-glow)' } }),
+                    React.createElement("stop", { offset: "100%", style: { stopColor: 'var(--color-accent-glow-dark)' } })
+                  )
+                ),
+                React.createElement("rect", { width: "300", height: "169", fill: "url(#ocean-glow)" }),
+                React.createElement("g", { className: "fill-[var(--color-accent-particle)]" },
+                  particles.map((p, i) => (
+                    React.createElement("circle", {
+                      key: i,
+                      cx: p.cx,
+                      cy: p.cy,
+                      r: p.r,
+                      className: "particle-animation",
+                      style: {
+                        animationDelay: p.delay,
+                        animationDuration: p.duration,
+                      }
+                    })
+                  ))
+                )
+              )
+            )
+          );
+        };
+
+        const ThemedBackground = () => {
+          const { settings } = useSettings();
+          switch (settings.theme) {
+            case 'forest':
+              return React.createElement(ForestAnimation, null);
+            case 'ocean':
+              return React.createElement(OceanAnimation, null);
+            case 'vedic':
+            default:
+              return React.createElement(StudyAnimation, null);
+          }
+        };
+
+        const BadgeUnlockModal = ({ badge, onClose }) => {
+          const [visible, setVisible] = useState(false);
+          const { playClickSound } = useAudioContext();
+
+          useEffect(() => {
+            const timer = setTimeout(() => setVisible(true), 100);
+            return () => clearTimeout(timer);
+          }, []);
+
+          const handleClose = () => {
+            playClickSound();
+            setVisible(false);
+            setTimeout(onClose, 300);
+          };
+
+          return (
+            React.createElement("div", { 
+              className: `fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`,
+              onClick: handleClose
+            },
+              React.createElement("div", { className: "absolute inset-0 bg-black/70 backdrop-blur-sm" }),
+              React.createElement("div", { 
+                onClick: (e) => e.stopPropagation(),
+                className: `relative text-center p-8 bg-gradient-to-br from-amber-200 to-orange-400 dark:from-gray-800 dark:to-orange-950 rounded-3xl shadow-2xl border-2 border-amber-400 dark:border-orange-500 max-w-sm w-full transition-all duration-500 ease-out ${visible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`
+              },
+                React.createElement("div", { className: "absolute -top-16 left-1/2 -translate-x-1/2 w-32 h-32" },
+                  React.createElement("img", { 
+                    src: badge.imageUrl, 
+                    alt: badge.name, 
+                    className: "w-full h-full rounded-full border-4 border-amber-300 dark:border-orange-500 shadow-lg object-cover"
+                  }),
+                  React.createElement("div", { className: "absolute inset-0 rounded-full bg-yellow-300/50 animate-ping -z-10" })
+                ),
+                React.createElement("div", { className: "mt-16" },
+                  React.createElement("p", { className: "text-sm font-semibold uppercase tracking-widest text-orange-800 dark:text-orange-300" }, "Achievement Unlocked!"),
+                  React.createElement("h2", { className: "font-lora text-4xl font-bold my-2 text-gray-900 dark:text-white" }, badge.name),
+                  React.createElement("p", { className: "text-gray-700 dark:text-gray-300 mb-6" }, badge.description),
+                  React.createElement("button", {
+                    onClick: handleClose,
+                    className: "px-6 py-2 bg-orange-800 text-white font-semibold rounded-full hover:bg-orange-900 transition-colors duration-300 shadow-lg"
+                  }, "Continue")
+                )
+              )
+            )
+          );
+        };
+
+        const FocusMode = ({ setView }) => {
+          const { settings } = useSettings();
+          const { addCompletedSession } = useProgress();
+          const { playCompleteSound, playClickSound } = useAudioContext();
+
+          const [mode, setMode] = useState('work');
+          const [isActive, setIsActive] = useState(true);
+          const [sessionCount, setSessionCount] = useState(0);
+
+          const getInitialTime = useCallback(() => {
+            switch (mode) {
+              case 'work': return settings.timerLength * 60;
+              case 'shortBreak': return settings.shortBreak * 60;
+              case 'longBreak': return settings.longBreak * 60;
+              default: return settings.timerLength * 60;
+            }
+          }, [mode, settings]);
+
+          const [seconds, setSeconds] = useState(getInitialTime());
+          
+          useEffect(() => {
+            setSeconds(getInitialTime());
+            setIsActive(true);
+          }, [settings.timerLength, settings.shortBreak, settings.longBreak, getInitialTime]);
+
+          const nextMode = useCallback(() => {
+            playCompleteSound();
+            if (mode === 'work') {
+              addCompletedSession();
+              const newSessionCount = sessionCount + 1;
+              setSessionCount(newSessionCount);
+              setMode(newSessionCount % 4 === 0 ? 'longBreak' : 'shortBreak');
+            } else {
+              setMode('work');
+            }
+            setIsActive(true);
+          }, [mode, sessionCount, addCompletedSession, playCompleteSound]);
+
+          useEffect(() => {
+            setSeconds(getInitialTime());
+          }, [mode, getInitialTime]);
+
+          useEffect(() => {
+            let interval = null;
+            if (isActive) {
+              interval = setInterval(() => {
+                setSeconds(s => {
+                  if (s <= 1) {
+                    nextMode();
+                    return 0;
+                  }
+                  return s - 1;
+                });
+              }, 1000);
+            }
+            return () => {
+              if (interval) clearInterval(interval);
+            };
+          }, [isActive, seconds, nextMode]);
+          
+          const handleExit = () => {
+            playClickSound();
+            setView('home');
+          }
+
+          const formattedTime = useMemo(() => {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+          }, [seconds]);
+
+          const modeText = {
+            work: 'Focusing...',
+            shortBreak: 'On a short break...',
+            longBreak: 'On a long break...',
+          };
+
+          return (
+            React.createElement("div", { className: "fixed inset-0 z-50 flex flex-col items-center justify-center p-4" },
+               React.createElement("button", { onClick: handleExit, className: "absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex gap-3 p-3 bg-white/20 dark:bg-black/20 rounded-full text-orange-900 dark:text-orange-200 hover:bg-white/40 dark:hover:bg-black/40 backdrop-blur-sm transition-all duration-300 shadow-lg" },
+                  React.createElement(ExitFocusIcon, { className: "w-6 h-6" })
+                ),
+              React.createElement("div", { className: "text-center" },
+                React.createElement("h1", { className: "text-xl sm:text-2xl text-orange-900 dark:text-orange-200 mb-4" }, modeText[mode]),
+                React.createElement("div", { className: "font-lora text-8xl sm:text-9xl md:text-[15rem] font-bold text-orange-950 dark:text-orange-100 tabular-nums" },
+                  formattedTime
+                ),
+                React.createElement("button", { 
+                  onClick: () => {
+                    playClickSound();
+                    setIsActive(!isActive);
+                  },
+                  className: "mt-8 px-8 py-3 rounded-full bg-white/30 dark:bg-black/30 backdrop-blur-sm text-lg font-semibold text-orange-900 dark:text-orange-200 hover:bg-white/50 dark:hover:bg-black/50 transition-all duration-300"
+                },
+                  isActive ? 'PAUSE' : 'RESUME'
+                )
+              )
+            )
+          );
+        };
+        
+        const PomodoroTimer = () => {
+          const { settings } = useSettings();
+          const { addCompletedSession } = useProgress();
+          const { playClickSound, playCompleteSound } = useAudioContext();
+
+          const [mode, setMode] = useState('work');
+          const [isActive, setIsActive] = useState(false);
+          const [sessionCount, setSessionCount] = useState(0);
+          const [isCompleting, setIsCompleting] = useState(false);
+
+          const getInitialTime = useCallback(() => {
+            switch (mode) {
+              case 'work': return settings.timerLength * 60;
+              case 'shortBreak': return settings.shortBreak * 60;
+              case 'longBreak': return settings.longBreak * 60;
+              default: return settings.timerLength * 60;
+            }
+          }, [mode, settings]);
+
+          const [seconds, setSeconds] = useState(getInitialTime());
+          
+          useEffect(() => {
+            setSeconds(getInitialTime());
+            setIsActive(false);
+          }, [settings.timerLength, settings.shortBreak, settings.longBreak, getInitialTime]);
+
+          useEffect(() => {
+            if (isCompleting) {
+              const timerId = setTimeout(() => setIsCompleting(false), 1200);
+              return () => clearTimeout(timerId);
+            }
+          }, [isCompleting]);
+
+          const nextMode = useCallback(() => {
+            playCompleteSound();
+            if (mode === 'work') {
+              addCompletedSession();
+              setIsCompleting(true);
+              const newSessionCount = sessionCount + 1;
+              setSessionCount(newSessionCount);
+              setMode(newSessionCount % 4 === 0 ? 'longBreak' : 'shortBreak');
+            } else {
+              setMode('work');
+            }
+            setIsActive(false);
+          }, [mode, sessionCount, addCompletedSession, playCompleteSound]);
+
+          useEffect(() => {
+            setSeconds(getInitialTime());
+          }, [mode, getInitialTime]);
+
+          useEffect(() => {
+            let interval = null;
+            if (isActive) {
+              interval = setInterval(() => {
+                setSeconds(s => {
+                  if (s <= 1) {
+                    nextMode();
+                    return 0;
+                  }
+                  return s - 1;
+                });
+              }, 1000);
+            }
+            return () => {
+              if (interval) clearInterval(interval);
+            };
+          }, [isActive, seconds, nextMode]);
+
+          const toggleTimer = () => {
+            playClickSound();
+            setIsActive(!isActive);
+          };
+
+          const resetTimer = () => {
+            playClickSound();
+            setIsActive(false);
+            setSeconds(getInitialTime());
+          };
+
+          const selectMode = (newMode) => {
+            playClickSound();
+            if (isActive) return;
+            setMode(newMode);
+            setSeconds(getInitialTime());
+          };
+          
+          const formattedTime = useMemo(() => {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+          }, [seconds]);
+
+          const progressPercentage = useMemo(() => {
+            const totalDuration = getInitialTime();
+            return ((totalDuration - seconds) / totalDuration) * 100;
+          }, [seconds, getInitialTime]);
+
+          const modeText = {
+            work: 'Focus Session',
+            shortBreak: 'Short Break',
+            longBreak: 'Long Break',
+          };
+
+          return (
+            React.createElement("div", { className: `p-6 md:p-8 bg-white/30 dark:bg-black/30 backdrop-blur-xl rounded-3xl shadow-2xl text-center relative overflow-hidden border-2 transform transition-all duration-700 ease-in-out ${isCompleting ? 'border-emerald-400 dark:border-emerald-500 shadow-emerald-500/40 dark:shadow-emerald-400/40 scale-[1.03]' : 'border-white/20 dark:border-black/20'}`},
+                React.createElement("div", { 
+                  className: "absolute top-0 left-0 bottom-0 bg-[var(--color-timer-progress)] transition-all duration-500 ease-linear",
+                  style: { width: `${progressPercentage}%` }
+                }),
+                React.createElement("div", { className: "relative z-10" },
+                    React.createElement("div", { className: "flex justify-center gap-2 sm:gap-4 mb-4" },
+                        (['work', 'shortBreak', 'longBreak']).map((m) => (
+                            React.createElement("button", {
+                                key: m,
+                                onClick: () => selectMode(m),
+                                className: `px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-full transition-all duration-300 ${
+                                    mode === m
+                                        ? 'bg-[var(--color-button-mode-active-bg)] text-white shadow-md'
+                                        : 'bg-white/50 dark:bg-black/50 text-orange-900/80 dark:text-orange-200/80 hover:bg-white/80 dark:hover:bg-black/80'
+                                }`
+                            },
+                               m === 'work' ? 'Focus' : m === 'shortBreak' ? 'Short Break' : 'Long Break'
+                            )
+                        ))
+                    ),
+                    React.createElement("div", { className: "font-lora text-6xl sm:text-8xl md:text-9xl font-bold text-orange-950 dark:text-orange-100 my-4 md:my-6 tabular-nums" },
+                        formattedTime
+                    ),
+                    React.createElement("p", { className: "text-orange-800 dark:text-orange-300 mb-6 text-lg" }, modeText[mode]),
+                    React.createElement("div", { className: "flex justify-center items-center gap-4" },
+                        React.createElement("button", { onClick: resetTimer, className: "p-4 rounded-full bg-white/50 dark:bg-black/50 text-orange-900 dark:text-orange-200 hover:bg-white/80 dark:hover:bg-black/80 transition-transform duration-300 hover:scale-105 shadow-lg" },
+                            React.createElement(ResetIcon, { className: "w-6 h-6" })
+                        ),
+                        React.createElement("button", { onClick: toggleTimer, className: "px-10 py-5 rounded-full bg-[var(--color-button-primary)] text-white hover:bg-[var(--color-button-primary-hover)] transition-all duration-300 text-xl font-bold shadow-xl flex items-center gap-2 transform hover:scale-105" },
+                            isActive ? React.createElement(PauseIcon, { className: "w-7 h-7" }) : React.createElement(PlayIcon, { className: "w-7 h-7" }),
+                            React.createElement("span", null, isActive ? 'PAUSE' : 'प्रारंभ')
+                        )
+                    )
+                )
+            )
+          );
+        };
+        
+        const QuoteDisplay = () => {
+          const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * allQuotes.length));
+          const [isFading, setIsFading] = useState(false);
+
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setIsFading(true);
+              setTimeout(() => {
+                setQuoteIndex((prevIndex) => (prevIndex + 1) % allQuotes.length);
+                setIsFading(false);
+              }, 500);
+            }, 11000);
+
+            return () => clearInterval(interval);
+          }, []);
+
+          const quote = allQuotes[quoteIndex];
+
+          if (!quote) return null;
+
+          return (
+            React.createElement("div", { className: `text-center font-lora p-4 bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-xl shadow-lg transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}` },
+              React.createElement("blockquote", { className: "italic" },
+                React.createElement("p", { className: "text-xl text-[var(--color-text-quote)] dark:text-[var(--dark-color-text-quote)] text-glow mb-2" },
+                    `"${quote.text}"`
+                ),
+                React.createElement("p", { className: "text-base text-orange-900/80 dark:text-orange-200/80 mt-1" },
+                    quote.translation
+                )
+              ),
+              React.createElement("cite", { className: "block text-right mt-2 text-sm opacity-90 text-orange-900/80 dark:text-orange-200/80" },
+                "- ", quote.source
+              )
+            )
+          );
+        };
+        
+        const SettingsPanel = ({ isOpen, setIsOpen }) => {
+          const { settings, updateSettings } = useSettings();
+          const { playClickSound, playSlideSound } = useAudioContext();
+          const prevIsOpenRef = useRef(isOpen);
+          
+          const themes = [
+            { id: 'vedic', name: 'Vedic Cosmos' },
+            { id: 'forest', name: 'Serene Forest' },
+            { id: 'ocean', name: 'Ocean Calm' },
+          ];
+
+          useEffect(() => {
+            if (isOpen && !prevIsOpenRef.current) {
+              playSlideSound();
+            }
+            prevIsOpenRef.current = isOpen;
+          }, [isOpen, playSlideSound]);
+
+          const handleClose = () => {
+            playClickSound();
+            setIsOpen(false);
+          };
+          
+          const handleUpdate = (key, value) => {
+             playClickSound();
+             updateSettings({ [key]: value });
+          };
+          
+          return (
+            React.createElement(React.Fragment, null,
+              React.createElement("div", { 
+                className: `fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`,
+                onClick: handleClose
+              }),
+              React.createElement("div", {
+                className: `fixed top-0 right-0 h-full w-full max-w-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl shadow-2xl z-50 transform transition-transform duration-500 ease-in-out ${
+                  isOpen ? 'translate-x-0' : 'translate-x-full'
+                } p-6 flex flex-col`
+              },
+                React.createElement("div", { className: "flex items-center justify-between mb-8" },
+                  React.createElement("h2", { className: "font-lora text-3xl font-bold text-orange-900 dark:text-orange-200" }, "Settings"),
+                  React.createElement("button", { onClick: handleClose, className: "p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" },
+                    React.createElement(CloseIcon, { className: "w-6 h-6" })
+                  )
+                ),
+
+                React.createElement("div", { className: "flex-grow overflow-y-auto space-y-8 pr-2" },
+                  React.createElement("div", { className: "space-y-2" },
+                    React.createElement("label", { className: "text-lg font-semibold text-orange-900 dark:text-orange-200" }, "Theme"),
+                     React.createElement("div", { className: "grid grid-cols-1 gap-2" },
+                        themes.map(theme => (
+                            React.createElement("button", {
+                                key: theme.id,
+                                onClick: () => handleUpdate('theme', theme.id),
+                                className: `p-3 rounded-lg text-left transition-colors ${
+                                    settings.theme === theme.id 
+                                        ? 'bg-orange-200 dark:bg-orange-800/50 font-semibold ring-2 ring-orange-500' 
+                                        : 'bg-white/50 dark:bg-black/30 hover:bg-orange-100 dark:hover:bg-black/50'
+                                }`
+                            }, theme.name)
+                        ))
+                    )
+                  ),
+                  
+                  React.createElement("div", { className: "space-y-2" },
+                    React.createElement("label", { className: "text-lg font-semibold text-orange-900 dark:text-orange-200" }, "Vedic Sound"),
+                    React.createElement("div", { className: "flex items-center justify-between p-3 bg-white/50 dark:bg-black/30 rounded-lg" },
+                      React.createElement("span", null, "Enable sound effects"),
+                      React.createElement("label", { className: "relative inline-flex items-center cursor-pointer" },
+                        React.createElement("input", { type: "checkbox", checked: settings.soundEnabled, onChange: (e) => handleUpdate('soundEnabled', e.target.checked), className: "sr-only peer" }),
+                        React.createElement("div", { className: "w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600" })
+                      )
+                    )
+                  ),
+                  
+                  React.createElement("div", { className: "space-y-4" },
+                    React.createElement("label", { className: "text-lg font-semibold text-orange-900 dark:text-orange-200" }, "Timer Durations (minutes)"),
+                    React.createElement("div", { className: "space-y-2" },
+                      React.createElement("div", { className: "flex items-center justify-between" },
+                        React.createElement("span", null, "Focus"),
+                        React.createElement("input", { type: "number", value: settings.timerLength, onChange: e => handleUpdate('timerLength', Number(e.target.value)), className: "w-20 p-1 rounded bg-white/50 dark:bg-black/30 text-center" })
+                      ),
+                      React.createElement("div", { className: "flex items-center justify-between" },
+                        React.createElement("span", null, "Short Break"),
+                        React.createElement("input", { type: "number", value: settings.shortBreak, onChange: e => handleUpdate('shortBreak', Number(e.target.value)), className: "w-20 p-1 rounded bg-white/50 dark:bg-black/30 text-center" })
+                      ),
+                      React.createElement("div", { className: "flex items-center justify-between" },
+                        React.createElement("span", null, "Long Break"),
+                        React.createElement("input", { type: "number", value: settings.longBreak, onChange: e => handleUpdate('longBreak', Number(e.target.value)), className: "w-20 p-1 rounded bg-white/50 dark:bg-black/30 text-center" })
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          );
+        };
+
+        const Home = ({ setView }) => {
+          const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+          const { playClickSound } = useAudioContext();
+
+          const handleFocusClick = () => {
+            playClickSound();
+            setView('focus');
+          };
+
+          const handleSettingsClick = () => {
+            playClickSound();
+            setIsSettingsOpen(!isSettingsOpen);
+          };
+
+          return (
+            React.createElement("main", { className: "relative min-h-screen w-full transition-all duration-500" },
+              React.createElement("div", { className: "absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex gap-3" },
+                React.createElement("button", { onClick: handleFocusClick, className: "p-3 bg-white/20 dark:bg-black/20 rounded-full text-orange-900 dark:text-orange-200 hover:bg-white/40 dark:hover:bg-black/40 backdrop-blur-sm transition-all duration-300 shadow-lg" },
+                  React.createElement(FocusIcon, { className: "w-6 h-6" })
+                ),
+                React.createElement("button", { onClick: handleSettingsClick, className: "p-3 bg-white/20 dark:bg-black/20 rounded-full text-orange-900 dark:text-orange-200 hover:bg-white/40 dark:hover:bg-black/40 backdrop-blur-sm transition-all duration-300 shadow-lg" },
+                  React.createElement(SettingsIcon, { className: "w-6 h-6" })
+                )
+              ),
+              React.createElement("div", { className: "relative z-10 flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8" },
+                React.createElement("div", { className: "w-full max-w-md lg:max-w-lg space-y-8" },
+                  React.createElement(QuoteDisplay, null),
+                  React.createElement(PomodoroTimer, null)
+                )
+              ),
+              React.createElement(SettingsPanel, { isOpen: isSettingsOpen, setIsOpen: setIsSettingsOpen })
+            )
+          );
+        };
+
+        // --- Main App Component ---
+        const App = () => {
+          const [settings, setSettings] = useLocalStorage('vedic_focus_settings', {
+            soundEnabled: true,
+            timerLength: 25,
+            shortBreak: 5,
+            longBreak: 15,
+            theme: 'vedic',
+          });
+          const [completedSessions, setCompletedSessions] = useLocalStorage('vedic_focus_sessions', 0);
+          const [view, setView] = useState('home');
+          const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState(null);
+
+          const { play: playClick } = useAudio('click');
+          const { play: playUnlock } = useAudio('unlock');
+          const { play: playComplete } = useAudio('complete');
+          const { play: playSlide } = useAudio('slide');
+          
+          useEffect(() => {
+            document.documentElement.classList.remove('theme-vedic', 'theme-forest', 'theme-ocean');
+            document.documentElement.classList.add(`theme-${settings.theme || 'vedic'}`);
+          }, [settings.theme]);
+
+          const audioContextValue = useMemo(() => ({
+            playClickSound: () => settings.soundEnabled && playClick(),
+            playUnlockSound: () => settings.soundEnabled && playUnlock(),
+            playCompleteSound: () => settings.soundEnabled && playComplete(),
+            playSlideSound: () => settings.soundEnabled && playSlide(),
+          }), [settings.soundEnabled, playClick, playUnlock, playComplete, playSlide]);
+
+          const updateSettings = useCallback((newSettings) => {
+            setSettings(prev => ({ ...prev, ...newSettings }));
+          }, [setSettings]);
+
+          const addCompletedSession = useCallback(() => {
+            setCompletedSessions(prev => prev + 1);
+          }, [setCompletedSessions]);
+
+          useEffect(() => {
+            const lastBadge = [...badges].reverse().find(b => completedSessions >= b.sessionsRequired);
+            const newBadge = badges.find(b => completedSessions === b.sessionsRequired);
+            if (newBadge && (!lastBadge || newBadge.id > lastBadge.id || newBadge.id === lastBadge.id)) {
+                setNewlyUnlockedBadge(newBadge);
+                audioContextValue.playUnlockSound();
+            }
+          }, [completedSessions, audioContextValue]);
+
+          const progressContextValue = useMemo(() => {
+            const lastUnlockedBadge = [...badges].reverse().find(b => completedSessions >= b.sessionsRequired) || null;
+            const nextBadge = badges.find(b => completedSessions < b.sessionsRequired) || null;
+            return { completedSessions, addCompletedSession, lastUnlockedBadge, nextBadge };
+          }, [completedSessions, addCompletedSession]);
+
+          return (
+            React.createElement(SettingsContext.Provider, { value: { settings, updateSettings } },
+              React.createElement(ProgressContext.Provider, { value: progressContextValue },
+                React.createElement(AudioContext.Provider, { value: audioContextValue },
+                  React.createElement("div", { className: "relative min-h-screen w-full text-gray-800 dark:text-gray-200 overflow-hidden bg-slate-950" },
+                    React.createElement(ThemedBackground, null),
+                    view === 'home' && React.createElement(Home, { setView: setView }),
+                    view === 'focus' && React.createElement(FocusMode, { setView: setView }),
+                    newlyUnlockedBadge && (
+                      React.createElement(BadgeUnlockModal, { badge: newlyUnlockedBadge, onClose: () => setNewlyUnlockedBadge(null) })
+                    )
+                  )
+                )
+              )
+            )
+          );
+        };
+
+        // --- Render Logic ---
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+          throw new Error("Could not find root element to mount to");
+        }
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(
+          React.createElement(React.StrictMode, null,
+            React.createElement(App, null)
+          )
+        );
+      })();
+    </script>
   </body>
 </html>
